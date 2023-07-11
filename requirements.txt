@@ -6,3 +6,4 @@ torchvision
 matplotlib
 tqdm
 pyyaml
+swin_transformer_pytorch
