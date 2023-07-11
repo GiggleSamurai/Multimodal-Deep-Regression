@@ -1,0 +1,30 @@
+Baseline:
+(ResNet) CNN + MLP = MSE Loss: 10
+ResNet + RNN = MSE Loss: 5
+I3D (Inflated 3D ConvNet) + LTSM = MSE Loss: 4
+
+Our Solution:
+MSE Loss = 0.01
+
+            Unsupervised Pretraining
+            
+                 ConvLSTMAutoencoder
+              ___Visual--->  O-\   /-O
+             /               O--\ /--O
+            /                O---O---O
+           /                 O---O---O
+          /                  O---O---O
+         /                   O--/|\--O
+        /                    O-/ | \-O
+       /                         |           Dual Transfer Learning
+      /                       Embedding         Supervised Fine-tuning 
+Video<                            \
+      \                            \-------> Transformer(LTSM/MLP) --> Regression <-- MSE_Loss
+       \                           /
+        \                         /
+         \                   Embedding
+          \                      ^
+           \                     |
+            \__Audio----> DeepSpeech(Mozilla) --> Text
+            
+                  Prebuilt Pretraining
