@@ -1,3 +1,4 @@
+# Python 3.8 or later (for Linux, Python 3.8.1+ is needed)
 numpy
 pandas
 torch
