@@ -1,5 +1,6 @@
-video_packs/*
-
+data/video_packs/*
+data/gen_data_x.pt
+data/gen_data_y.pt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
