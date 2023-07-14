@@ -40,3 +40,6 @@ def evaluate(model, dataloader, criterion, device='cpu'):
 
     avg_loss = total_loss / len(dataloader)
     return total_loss, avg_loss
+
+def get_device():
+    return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
