@@ -14,7 +14,7 @@ import sys
 # from data.tensor_helpers import ints_to_tensor, pad_tensors
 
 
-def process_data(input_type, addition_parameters=None, verbose=False, device='CPU'):
+def process_data(input_type, addition_parameters=None, verbose=False, device='cpu'):
     
     assert input_type in ['initial_1000'], 'Current implementation only set to process 1000 video dataset (initial_1000)'
 
@@ -94,7 +94,7 @@ def get_video_play_count(input_type):
     return video_views
 
 
-def process_video(video_object_path, start=0, end=None, read_video=True, read_audio=False, device='CPU'):
+def process_video(video_object_path, start=0, end=None, read_video=True, read_audio=False, device='cpu'):
     """
     Based off of https://pytorch.org/vision/main/auto_examples/plot_video_api.html#sphx-glr-auto-examples-plot-video-api-py
     """
