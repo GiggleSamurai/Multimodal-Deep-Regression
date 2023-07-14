@@ -2,12 +2,12 @@ import torch
 import torch.nn as nn
 
 class CNN3D(nn.Module):
-    def __init__(self, filters = 16, dropout_rate = 0.0, reduce_pool = 4):
+    def __init__(self, filters = 16, dropout_rate = 0.0, reduce_pool = 4, depth = 64):
         super(CNN3D, self).__init__()
         self.channels = 3
         self.H = 1024
         self.W = 576
-        self.D = 64
+        self.D = depth
         self.filters = filters
         self.dropout_rate = dropout_rate
         # reduce adaptive pool size
@@ -33,6 +33,5 @@ class CNN3D(nn.Module):
         x = self.flatten(x)
         x = self.dropout(x)
         x = self.relu(x)
-        #print('Check size',x.size())
         x = self.fc(x)
         return x
