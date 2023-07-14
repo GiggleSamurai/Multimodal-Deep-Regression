@@ -2,16 +2,16 @@ import torch
 import torch.nn as nn
 
 class CNN3D(nn.Module):
-    def __init__(self):
+    def __init__(self, filters = 16, dropout_rate = 0.0, reduce_pool = 4):
         super(CNN3D, self).__init__()
         self.channels = 3
-        self.filters = 16
         self.H = 1024
         self.W = 576
         self.D = 64
-
+        self.filters = filters
+        self.dropout_rate = dropout_rate
         # reduce adaptive pool size
-        self.reduce = 1#32
+        self.reduce = reduce_pool # 1 is unchanged, 2 is half, 4 is quarter..32, 64.
         self.H = self.H // self.reduce
         self.W = self.W // self.reduce
         self.D = self.D // self.reduce
@@ -23,12 +23,15 @@ class CNN3D(nn.Module):
 
         self.adaptive_pool = nn.AdaptiveAvgPool3d((self.D, self.H, self.W))
         self.fc = nn.Linear(self.filters * self.D * self.H * self.W, 1)
+        self.dropout = nn.Dropout(self.dropout_rate)
 
     def forward(self, x):
         x = self.conv1(x)
         x = self.maxpool(x)
+        x = self.dropout(x)
         x = self.adaptive_pool(x)
         x = self.flatten(x)
+        x = self.dropout(x)
         x = self.relu(x)
         #print('Check size',x.size())
         x = self.fc(x)

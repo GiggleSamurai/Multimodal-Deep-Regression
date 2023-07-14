@@ -63,6 +63,8 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
             # Save the x & y tensors
             with open(x_file_path, 'wb') as x_file, open(y_file_path, 'wb') as y_file:
                 # Converting target video play count to tensor and adding dimension 
+                print(video_views)
+                print(tiktok_video_id)
                 y_data = torch.as_tensor([video_views[tiktok_video_id]]).float().unsqueeze(1)
                 
                 torch.save(vf, x_file)
