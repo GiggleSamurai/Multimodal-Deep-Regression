@@ -3,7 +3,7 @@ import json
 import torch
 import itertools
 import torchvision
-import numpy as np
+import torch.nn as nn
 import matplotlib.pyplot as plt
 
 import sys
@@ -53,6 +53,9 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
 
             tiktok_video_id = tiktok_video.split(sep='.')[0]
             vf, af, info, meta = process_video(video_object_path=video_path, device=device)
+            # Reshaping tensor
+            frames, n_channels, height, width = vf.shape
+            vf = torch.reshape(vf, (n_channels, frames, height, width))
             
             x_file_path = f"{x_dir}{tiktok_video_id}_x_tensor.pt"
             y_file_path = f"{y_dir}{tiktok_video_id}_y_tensor.pt"
@@ -138,3 +141,27 @@ def get_valid_input_types():
     initial_1000 dataset: https://www.kaggle.com/datasets/erikvdven/tiktok-trending-december-2020?resource=download
     """
     return ['initial_1000']
+
+
+def get_base_tensor_directories(input_type):
+    return f"../data/x_tensors/{input_type}/", f"../data/y_tensors/{input_type}/"
+
+
+def generate_batch(batch):
+    
+    # max depth of each batch
+    max_d = max([x.shape[1] for x, y in batch])
+    padded_x = []
+    y_batch = []
+
+    for x, y in batch:
+        d = x.shape[1]
+        
+        # ConstantPad3d (left, right, top, bottom, front, back)
+        padding = nn.ConstantPad3d((0, 0, 0, 0, 0, max_d - d), 0)
+        padded_x.append(padding(x))
+        y_batch.append(y)
+
+    x = torch.stack(padded_x)
+    y = torch.tensor(y_batch)
+    return x, y
