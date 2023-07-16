@@ -110,14 +110,7 @@ def get_video_play_count(input_type):
         video_metadata_list = json.load(f)
         video_views = {}
         for video_metadata in video_metadata_list:
-            if 'M' in video_metadata['views']:
-                video_metadata_views = float(video_metadata['views'].replace('M', '')) * 1000000
-            elif 'K'  in video_metadata['views']:
-                video_metadata_views = float(video_metadata['views'].replace('K', '')) * 1000
-            else:
-                video_metadata_views = float(video_metadata['views'])
-
-            video_views[video_metadata['id']] = video_metadata_views
+            video_views[video_metadata['id']] = video_metadata['views_k']
     else:
         raise Exception(f'Retrieval of video play count not implemented for {input_type} dataset.')
 
