@@ -4,6 +4,10 @@ data/gen_data_y.pt
 data/x_tensors/*
 data/y_tensors/*
 *.mp4
+
+# work in progress
+main_flexible_D-Copy1.ipynb
+models/ConvLSTM.py
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
