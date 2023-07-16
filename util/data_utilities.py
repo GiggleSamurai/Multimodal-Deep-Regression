@@ -15,70 +15,81 @@ import sys
 
 
 def process_data(input_type, addition_parameters=None, verbose=False, device='cpu'):
+    """
+    For this implementation to work you'll need to have the videos loaded into a directory under
+    '../data/video_packs/input_type'
+    """
     
-    assert input_type in ['initial_1000'], 'Current implementation only set to process 1000 video dataset (initial_1000)'
+    assert input_type in get_valid_input_types(), 'Current implementation only set to process initial_1000, 1k and 5k video packs'
 
-    if input_type == 'initial_1000':
-        """
-        For this implementation to work you'll need to have the videos loaded into a directory under
-        '../data/videos'
-        """
- 
-        sys.path.append("..")
+    sys.path.append("..")
+    top_level_path = f'../data/video_packs/{input_type}'
+    video_list = os.listdir(top_level_path)
 
-        top_level_path = '../data/videos'
-        video_list = os.listdir(top_level_path)
-
-        if addition_parameters is None:
-            first_n_videos = len(video_list)
-        else:
-            if 'first_n_videos' in addition_parameters.keys():
-                first_n_videos = addition_parameters['first_n_videos']
-            else:
-                first_n_videos = len(video_list)
-
-        video_views = get_video_play_count(input_type=input_type)
-
-        x_dir = f"../data/x_tensors/{input_type}/"
-        y_dir = f"../data/y_tensors/{input_type}/"
-
-        os.makedirs(x_dir, exist_ok=True)
-        os.makedirs(y_dir, exist_ok=True)
-
-        for tiktok_video in video_list[:first_n_videos]:
-            video_path = f"{top_level_path}/{tiktok_video}"
-
-            if verbose:
-                print(f'Currently processing: {tiktok_video}')
-
-            tiktok_video_id = tiktok_video.split(sep='.')[0]
-            vf, af, info, meta = process_video(video_object_path=video_path, device=device)
-            # Reshaping tensor
-            frames, n_channels, height, width = vf.shape
-            vf = torch.reshape(vf, (n_channels, frames, height, width))
-            
-            x_file_path = f"{x_dir}{tiktok_video_id}_x_tensor.pt"
-            y_file_path = f"{y_dir}{tiktok_video_id}_y_tensor.pt"
-
-            # Save the x & y tensors
-            with open(x_file_path, 'wb') as x_file, open(y_file_path, 'wb') as y_file:
-                # Converting target video play count to tensor and adding dimension 
-                print(video_views)
-                print(tiktok_video_id)
-                y_data = torch.as_tensor([video_views[tiktok_video_id]]).float().unsqueeze(1)
-                
-                torch.save(vf, x_file)
-                torch.save(y_data, y_file)
-
-            if verbose:
-                print(f'Done processing: {video_path}.')
-                print(f'X Tensor ({vf.shape}) saved under: {x_file_path}.')
-                print(f'Y Tensor ({y_data.shape}) saved under: {y_file_path}.')
-                print(f'metadata:\n{meta}\n\n')
-
-        return
+    if addition_parameters is None:
+        first_n_videos = len(video_list)
     else:
-        raise Exception(f'Enter valid input type: {get_valid_input_types()}')
+        if 'first_n_videos' in addition_parameters.keys():
+            first_n_videos = addition_parameters['first_n_videos']
+        else:
+            first_n_videos = len(video_list)
+
+    video_views = get_video_play_count(input_type=input_type)
+
+    if verbose:
+        print(video_views)
+
+    x_dir = f"../data/x_tensors/{input_type}/"
+    y_dir = f"../data/y_tensors/{input_type}/"
+
+    os.makedirs(x_dir, exist_ok=True)
+    os.makedirs(y_dir, exist_ok=True)
+
+    processed_videos, video_count = 0, 0 
+    while processed_videos < first_n_videos or video_count == len(video_list) - 1:
+        tiktok_video = video_list[video_count]
+        video_path = f"{top_level_path}/{tiktok_video}"
+        tiktok_video_id = tiktok_video.split(sep='.')[0]
+
+        # Handling case when video doesn't have view count
+        if tiktok_video_id not in video_views.keys():
+            if verbose:
+                print(f'No video views for {tiktok_video_id}, moving to next video.')
+            video_count += 1
+            continue
+
+        if verbose:
+            print(f'Currently processing: {tiktok_video}')
+
+        
+        vf, af, info, meta = process_video(video_object_path=video_path, device=device)
+        # Reshaping tensor
+        frames, n_channels, height, width = vf.shape
+        vf = torch.reshape(vf, (n_channels, frames, height, width))
+        
+        x_file_path = f"{x_dir}{tiktok_video_id}_x_tensor.pt"
+        y_file_path = f"{y_dir}{tiktok_video_id}_y_tensor.pt"
+
+        # Save the x & y tensors
+        with open(x_file_path, 'wb') as x_file, open(y_file_path, 'wb') as y_file:
+            # Converting target video play count to tensor and adding dimension 
+            if verbose:
+                print(tiktok_video_id)
+                print(video_views[tiktok_video_id])
+
+            y_data = torch.as_tensor([video_views[tiktok_video_id]]).float().unsqueeze(1)
+            
+            torch.save(vf, x_file)
+            torch.save(y_data, y_file)
+
+        if verbose:
+            print(f'Done processing: {video_path}.')
+            print(f'X Tensor ({vf.shape}) saved under: {x_file_path}.')
+            print(f'Y Tensor ({y_data.shape}) saved under: {y_file_path}.')
+            print(f'metadata:\n{meta}\n\n')
+
+        processed_videos += 1
+        video_count += 1
 
 
 def get_video_play_count(input_type):
@@ -93,6 +104,19 @@ def get_video_play_count(input_type):
         video_views = {}
         for video_metadata in video_metadata_list:
             video_views[video_metadata['id']] = video_metadata['playCount']
+    elif input_type in ['video_pack_1000', 'video_pack_5000']:
+        f = open('../data/tiktok_meta_data.json', encoding="utf8")
+        video_metadata_list = json.load(f)
+        video_views = {}
+        for video_metadata in video_metadata_list:
+            if 'M' in video_metadata['views']:
+                video_metadata_views = float(video_metadata['views'].replace('M', '')) * 1000000
+            elif 'K'  in video_metadata['views']:
+                video_metadata_views = float(video_metadata['views'].replace('K', '')) * 1000
+            else:
+                video_metadata_views = float(video_metadata['views'])
+
+            video_views[video_metadata['id']] = video_metadata_views
     else:
         raise Exception(f'Retrieval of video play count not implemented for {input_type} dataset.')
 
@@ -142,7 +166,7 @@ def get_valid_input_types():
     """
     initial_1000 dataset: https://www.kaggle.com/datasets/erikvdven/tiktok-trending-december-2020?resource=download
     """
-    return ['initial_1000']
+    return ['initial_1000', 'video_pack_1000', 'video_pack_5000']
 
 
 def get_base_tensor_directories(input_type):
