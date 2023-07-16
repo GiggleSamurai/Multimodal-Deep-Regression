@@ -35,9 +35,10 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
             first_n_videos = len(video_list)
 
     video_views = get_video_play_count(input_type=input_type)
-
-    if verbose:
-        print(video_views)
+    
+    # Removing this
+    # if verbose:
+    #     print(video_views)
 
     x_dir = f"../data/x_tensors/{input_type}/"
     y_dir = f"../data/y_tensors/{input_type}/"
