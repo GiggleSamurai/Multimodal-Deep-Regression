@@ -14,7 +14,7 @@ import sys
 # from data.tensor_helpers import ints_to_tensor, pad_tensors
 
 
-def process_data(input_type, addition_parameters=None, verbose=False, device='cpu', skip_frames=False, frames_to_skip=5):
+def process_data(input_type, addition_parameters=None, verbose=False, device='cpu', skip_frames=False, frames_to_skip=5, shrink=1, normalize=False):
     """
     For this implementation to work you'll need to have the videos loaded into a directory under
     '../data/video_packs/input_type'
@@ -78,9 +78,15 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
             if verbose:
                 print(f'New tensor size: {vf.shape}')
         
-        # resize the tensor to 1024x576
+        # Need to normalize the tensor
+        #vf = nn.functional.normalize(vf, dim=(0, 1))
+        if normalize:
+            vf = vf/ 255.0
 
+        # resize the tensor to 1024x576
         vf = resize_tensor(vf)
+        if shrink > 1:
+            vf = shrink_video(vf,shrink=shrink)
         if verbose:
                 print(f'Resize to tensor size: {vf.shape}')
                 
@@ -225,3 +231,9 @@ def resize_tensor(input_tensor):
     padding = (padding_width//2, padding_width//2, padding_height//2, padding_height//2)
     padded_tensor = nn.functional.pad(resized_tensor, padding, "constant", 0)
     return padded_tensor
+
+def shrink_video(input_tensor,shrink=1):
+    new_height = 1024//shrink
+    new_width = 576//shrink
+    resized_tensor = nn.functional.interpolate(input_tensor, size=(new_height, new_width), mode='bilinear', align_corners=False)
+    return resized_tensor
