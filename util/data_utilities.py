@@ -78,6 +78,12 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
             if verbose:
                 print(f'New tensor size: {vf.shape}')
         
+        # resize the tensor to 1024x576
+
+        vf = resize_tensor(vf)
+        if verbose:
+                print(f'Resize to tensor size: {vf.shape}')
+                
         x_file_path = f"{x_dir}{tiktok_video_id}_x_tensor.pt"
         y_file_path = f"{y_dir}{tiktok_video_id}_y_tensor.pt"
 
@@ -195,3 +201,27 @@ def generate_batch(batch):
     x = torch.stack(padded_x)
     y = torch.tensor(y_batch)
     return x, y
+
+def resize_tensor(input_tensor):
+    original_height = input_tensor.shape[2]
+    original_width = input_tensor.shape[3]
+
+    if original_height == 1024 and original_width == 576:
+        return input_tensor
+
+    # resize tensor and keep to input ratio
+    new_width = 576
+    aspect_ratio = original_height / original_width
+
+    # new height can not be bigger than 1024
+    new_height = min(1024,int(new_width * aspect_ratio))
+    resized_tensor = nn.functional.interpolate(input_tensor, size=(new_height, new_width), mode='bilinear', align_corners=False)
+
+    # fill rest with 0 padding
+    padding_height = 1024 - resized_tensor.shape[2]
+    padding_width = 576 - resized_tensor.shape[3]
+
+    # padding (left, right, top, bottom)
+    padding = (padding_width//2, padding_width//2, padding_height//2, padding_height//2)
+    padded_tensor = nn.functional.pad(resized_tensor, padding, "constant", 0)
+    return padded_tensor
