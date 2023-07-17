@@ -14,7 +14,7 @@ import sys
 # from data.tensor_helpers import ints_to_tensor, pad_tensors
 
 
-def process_data(input_type, addition_parameters=None, verbose=False, device='cpu'):
+def process_data(input_type, addition_parameters=None, verbose=False, device='cpu', skip_frames=False, frames_to_skip=5):
     """
     For this implementation to work you'll need to have the videos loaded into a directory under
     '../data/video_packs/input_type'
@@ -67,6 +67,16 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
         # Reshaping tensor
         frames, n_channels, height, width = vf.shape
         vf = torch.reshape(vf, (n_channels, frames, height, width))
+
+        if skip_frames:
+            if verbose:
+                print(f'Downsampling video tensors for every {frames_to_skip} frame')
+                print(f'Original tensor size: {(n_channels, frames, height, width)}')
+            frame_idx = [True if i % frames_to_skip == 0 else False for i in range(frames)]
+            vf = vf[:, frame_idx, : ,:]
+
+            if verbose:
+                print(f'New tensor size: {vf.shape}')
         
         x_file_path = f"{x_dir}{tiktok_video_id}_x_tensor.pt"
         y_file_path = f"{y_dir}{tiktok_video_id}_y_tensor.pt"
