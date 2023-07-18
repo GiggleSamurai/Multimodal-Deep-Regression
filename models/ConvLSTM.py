@@ -13,11 +13,11 @@ from torch import nn
 
 # 3D ConvLSTM Cell
 class ConvLSTMCell(nn.Module):
-    def __init__(self, input_dim, hidden_dim, kernel_size):
+    def __init__(self, input_dim, hidden_dim, kernel_size, shrink=1):
         super(ConvLSTMCell, self).__init__()
         self.channels = 3
-        self.H = 1024
-        self.W = 576
+        self.H = 1024//shrink
+        self.W = 576//shrink
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.kernel_size = kernel_size
@@ -50,16 +50,16 @@ class ConvLSTMCell(nn.Module):
 
 # ConvLSTM Autoencoder
 class ConvLSTMAutoencoder(nn.Module):
-    def __init__(self, hidden_dim):
+    def __init__(self, hidden_dim, shrink=1, normalize=False):
         super(ConvLSTMAutoencoder, self).__init__()
         self.channels = 3
         self.hidden_dim = hidden_dim
-        self.encoder_1 = ConvLSTMCell(input_dim=self.channels,hidden_dim=hidden_dim,kernel_size=(3, 3))
-        self.encoder_2 = ConvLSTMCell(input_dim=hidden_dim,hidden_dim=hidden_dim,kernel_size=(3, 3))
-        self.decoder_1 = ConvLSTMCell(input_dim=hidden_dim,hidden_dim=hidden_dim,kernel_size=(3, 3))
-        self.decoder_2 = ConvLSTMCell(input_dim=hidden_dim,hidden_dim=hidden_dim,kernel_size=(3, 3))
+        self.encoder_1 = ConvLSTMCell(input_dim=self.channels,hidden_dim=hidden_dim,kernel_size=(3, 3),shrink=shrink)
+        self.encoder_2 = ConvLSTMCell(input_dim=hidden_dim,hidden_dim=hidden_dim,kernel_size=(3, 3),shrink=shrink)
+        self.decoder_1 = ConvLSTMCell(input_dim=hidden_dim,hidden_dim=hidden_dim,kernel_size=(3, 3),shrink=shrink)
+        self.decoder_2 = ConvLSTMCell(input_dim=hidden_dim,hidden_dim=hidden_dim,kernel_size=(3, 3),shrink=shrink)
         self.decoder_CNN = nn.Conv3d(in_channels=hidden_dim,out_channels=self.channels,kernel_size=(1, 3, 3), padding=(0, 1, 1))
-    
+        self.normalize = normalize
     def encoder(self, x, seq_len, h_t, c_t, h_t2, c_t2):
         # encoder
         for t in range(seq_len):
@@ -88,7 +88,8 @@ class ConvLSTMAutoencoder(nn.Module):
         outputs = outputs.permute(0, 2, 1, 3, 4)
         outputs = self.decoder_CNN(outputs)
         outputs = torch.nn.Sigmoid()(outputs)
-
+        if not self.normalize:
+            outputs = outputs * 255
         return outputs
     
     def forward(self, x: torch.Tensor, future_seq=None, hidden_state=None):

@@ -14,7 +14,7 @@ import sys
 # from data.tensor_helpers import ints_to_tensor, pad_tensors
 
 
-def process_data(input_type, addition_parameters=None, verbose=False, device='cpu', skip_frames=False, frames_to_skip=5):
+def process_data(input_type, addition_parameters=None, verbose=False, device='cpu', skip_frames=False, frames_to_skip=5, shrink=1, normalize=False):
     """
     For this implementation to work you'll need to have the videos loaded into a directory under
     '../data/video_packs/input_type'
@@ -35,10 +35,6 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
             first_n_videos = len(video_list)
 
     video_views = get_video_play_count(input_type=input_type)
-    
-    # Removing this
-    # if verbose:
-    #     print(video_views)
 
     x_dir = f"../data/x_tensors/{input_type}/"
     y_dir = f"../data/y_tensors/{input_type}/"
@@ -64,9 +60,7 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
 
         
         vf, af, info, meta = process_video(video_object_path=video_path, device=device)
-        # Reshaping tensor
-        frames, n_channels, height, width = vf.shape
-        vf = torch.reshape(vf, (n_channels, frames, height, width))
+        n_channels, frames, height, width = vf.shape
 
         if skip_frames:
             if verbose:
@@ -78,6 +72,18 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
             if verbose:
                 print(f'New tensor size: {vf.shape}')
         
+        # Need to normalize the tensor
+        #vf = nn.functional.normalize(vf, dim=(0, 1))
+        # if normalize:
+        #     vf = vf/ 255.0
+
+        # resize the tensor to 1024x576
+        #vf = resize_tensor(vf)
+        # if shrink > 1:
+        #     vf = shrink_video(vf,shrink=shrink)
+        # if verbose:
+        #         print(f'Resize to tensor size: {vf.shape}')
+                
         x_file_path = f"{x_dir}{tiktok_video_id}_x_tensor.pt"
         y_file_path = f"{y_dir}{tiktok_video_id}_y_tensor.pt"
 
@@ -150,7 +156,8 @@ def process_video(video_object_path, start=0, end=None, read_video=True, read_au
             frames.append(frame['data'])
             video_pts.append(frame['pts'])
         if len(frames) > 0:
-            video_frames = torch.stack(frames, 0)
+            # Updating to stack the tensor with the frames as 2nd dimension so no reshaping is needed
+            video_frames = torch.stack(frames, 1)
 
     audio_frames = torch.empty(0) # .to(device)
     audio_pts = []
@@ -161,7 +168,7 @@ def process_video(video_object_path, start=0, end=None, read_video=True, read_au
             frames.append(frame['data'])
             audio_pts.append(frame['pts'])
         if len(frames) > 0:
-            audio_frames = torch.cat(frames, 0)
+            audio_frames = torch.cat(frames, 1)
 
     return video_frames, audio_frames, (video_pts, audio_pts), video_object.get_metadata()
 
@@ -195,3 +202,33 @@ def generate_batch(batch):
     x = torch.stack(padded_x)
     y = torch.tensor(y_batch)
     return x, y
+
+def resize_tensor(input_tensor):
+    original_height = input_tensor.shape[2]
+    original_width = input_tensor.shape[3]
+
+    if original_height == 1024 and original_width == 576:
+        return input_tensor
+
+    # resize tensor and keep to input ratio
+    new_width = 576
+    aspect_ratio = original_height / original_width
+
+    # new height can not be bigger than 1024
+    new_height = min(1024,int(new_width * aspect_ratio))
+    resized_tensor = nn.functional.interpolate(input_tensor, size=(new_height, new_width), mode='bilinear', align_corners=False)
+
+    # fill rest with 0 padding
+    padding_height = 1024 - resized_tensor.shape[2]
+    padding_width = 576 - resized_tensor.shape[3]
+
+    # padding (left, right, top, bottom)
+    padding = (padding_width//2, padding_width//2, padding_height//2, padding_height//2)
+    padded_tensor = nn.functional.pad(resized_tensor, padding, "constant", 0)
+    return padded_tensor
+
+def shrink_video(input_tensor,shrink=1):
+    new_height = 1024//shrink
+    new_width = 576//shrink
+    resized_tensor = nn.functional.interpolate(input_tensor, size=(new_height, new_width), mode='bilinear', align_corners=False)
+    return resized_tensor
