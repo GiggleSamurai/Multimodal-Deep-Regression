@@ -35,10 +35,6 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
             first_n_videos = len(video_list)
 
     video_views = get_video_play_count(input_type=input_type)
-    
-    # Removing this
-    # if verbose:
-    #     print(video_views)
 
     x_dir = f"../data/x_tensors/{input_type}/"
     y_dir = f"../data/y_tensors/{input_type}/"
@@ -64,9 +60,7 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
 
         
         vf, af, info, meta = process_video(video_object_path=video_path, device=device)
-        # Reshaping tensor
-        frames, n_channels, height, width = vf.shape
-        vf = torch.reshape(vf, (n_channels, frames, height, width))
+        n_channels, frames, height, width = vf.shape
 
         if skip_frames:
             if verbose:
@@ -162,7 +156,8 @@ def process_video(video_object_path, start=0, end=None, read_video=True, read_au
             frames.append(frame['data'])
             video_pts.append(frame['pts'])
         if len(frames) > 0:
-            video_frames = torch.stack(frames, 0)
+            # Updating to stack the tensor with the frames as 2nd dimension so no reshaping is needed
+            video_frames = torch.stack(frames, 1)
 
     audio_frames = torch.empty(0) # .to(device)
     audio_pts = []
@@ -173,7 +168,7 @@ def process_video(video_object_path, start=0, end=None, read_video=True, read_au
             frames.append(frame['data'])
             audio_pts.append(frame['pts'])
         if len(frames) > 0:
-            audio_frames = torch.cat(frames, 0)
+            audio_frames = torch.cat(frames, 1)
 
     return video_frames, audio_frames, (video_pts, audio_pts), video_object.get_metadata()
 
