@@ -80,15 +80,15 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
         
         # Need to normalize the tensor
         #vf = nn.functional.normalize(vf, dim=(0, 1))
-        if normalize:
-            vf = vf/ 255.0
+        # if normalize:
+        #     vf = vf/ 255.0
 
         # resize the tensor to 1024x576
-        vf = resize_tensor(vf)
-        if shrink > 1:
-            vf = shrink_video(vf,shrink=shrink)
-        if verbose:
-                print(f'Resize to tensor size: {vf.shape}')
+        #vf = resize_tensor(vf)
+        # if shrink > 1:
+        #     vf = shrink_video(vf,shrink=shrink)
+        # if verbose:
+        #         print(f'Resize to tensor size: {vf.shape}')
                 
         x_file_path = f"{x_dir}{tiktok_video_id}_x_tensor.pt"
         y_file_path = f"{y_dir}{tiktok_video_id}_y_tensor.pt"
