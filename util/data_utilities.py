@@ -6,6 +6,9 @@ import torchvision
 import torch.nn as nn
 import matplotlib.pyplot as plt
 
+from sklearn.model_selection import train_test_split
+from torch.utils.data import DataLoader, TensorDataset
+
 import sys
 
 
@@ -14,7 +17,7 @@ import sys
 # from data.tensor_helpers import ints_to_tensor, pad_tensors
 
 
-def process_data(input_type, addition_parameters=None, verbose=False, device='cpu', skip_frames=False, frames_to_skip=5, shrink=1, normalize=False):
+def process_data(input_type, addition_parameters=None, verbose=False, device='cpu', skip_frames=False, frames_to_skip=5, shrink=False, normalize=False, resize_tensors=False):
     """
     For this implementation to work you'll need to have the videos loaded into a directory under
     '../data/video_packs/input_type'
@@ -78,11 +81,16 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
         #     vf = vf/ 255.0
 
         # resize the tensor to 1024x576
-        #vf = resize_tensor(vf)
-        # if shrink > 1:
-        #     vf = shrink_video(vf,shrink=shrink)
-        # if verbose:
-        #         print(f'Resize to tensor size: {vf.shape}')
+        if resize_tensors:
+            vf = resize_tensor(vf)
+
+            if verbose:
+                    print(f'Resized tensor to size: {vf.shape}')
+        
+        if shrink:
+            vf = shrink_video(vf,shrink=shrink)
+            if verbose:
+                    print(f'Resize to tensor size: {vf.shape}')
                 
         x_file_path = f"{x_dir}{tiktok_video_id}_x_tensor.pt"
         y_file_path = f"{y_dir}{tiktok_video_id}_y_tensor.pt"
@@ -232,3 +240,30 @@ def shrink_video(input_tensor,shrink=1):
     new_width = 576//shrink
     resized_tensor = nn.functional.interpolate(input_tensor, size=(new_height, new_width), mode='bilinear', align_corners=False)
     return resized_tensor
+
+
+def get_train_and_val_loader(input_type, batch_size = 1,  verbose=False):
+    x_dir, y_dir = get_base_tensor_directories(input_type=input_type)
+
+    x_files = sorted([os.path.join(x_dir, f) for f in os.listdir(x_dir)])
+    y_files = sorted([os.path.join(y_dir, f) for f in os.listdir(y_dir)])
+
+    x_data = [torch.load(f) for f in x_files]
+    y_data = [torch.load(f) for f in y_files]
+
+    # Split the data
+    x_train, x_val, y_train, y_val = train_test_split(x_data, y_data, test_size=0.2, shuffle=False)
+
+    if verbose:
+        print(x_train[0].size())
+        print(x_val[0].size())
+        print(len(y_train))
+        print(len(y_val))
+    
+    # Create Batches with DataLoaders
+    train_loader = list(zip(x_train, y_train)) #TensorDataset(x_train, y_train)
+    val_loader = list(zip(x_val, y_val)) #TensorDataset(x_val, y_val)
+    train_loader = DataLoader(train_loader, batch_size=batch_size, shuffle=True, collate_fn=generate_batch)
+    val_loader = DataLoader(val_loader, batch_size=batch_size, shuffle=False, collate_fn=generate_batch)
+
+    return train_loader, val_loader

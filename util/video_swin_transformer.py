@@ -467,7 +467,8 @@ class PatchEmbed3D(nn.Module):
             x = x.flatten(2).transpose(1, 2)
             x = self.norm(x)
             x = x.transpose(1, 2).view(-1, self.embed_dim, D, Wh, Ww)
-
+        
+        print(f'PatchEmbed3D shape:', x.shape)
         return x
 
 

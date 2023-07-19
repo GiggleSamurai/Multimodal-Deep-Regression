@@ -10,7 +10,8 @@ def train(model, dataloader, criterion, optimizer, device='cpu', verbose=False):
     total_loss = 0.0
     untrainable_tensors = 0
     for inputs, targets in dataloader:
-        try:
+        # try:
+        if 1 == 1:
             if verbose:
                 print(f'\n\nForward pass on batch with size: {inputs.shape}')
 
@@ -19,11 +20,11 @@ def train(model, dataloader, criterion, optimizer, device='cpu', verbose=False):
             # forward pass
             outputs = model(inputs)
 
-        except Exception as e:
-            print(f'Unable to train on tensor of size: {inputs.shape}')
-            print('caugh an error, keep going ' + str(e))
-            untrainable_tensors += 1
-            continue
+        # except Exception as e:
+        #     print(f'Unable to train on tensor of size: {inputs.shape}')
+        #     print('caugh an error, keep going ' + str(e))
+        #     untrainable_tensors += 1
+        #     continue
 
         if outputs.shape != targets.shape:
             targets = targets.unsqueeze(1)
