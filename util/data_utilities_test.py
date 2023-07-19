@@ -5,14 +5,7 @@ import itertools
 import torchvision
 import torch.nn as nn
 import matplotlib.pyplot as plt
-<<<<<<< HEAD
-
-from sklearn.model_selection import train_test_split
-from torch.utils.data import DataLoader, TensorDataset
-
-=======
 from tqdm import tqdm
->>>>>>> d7f4f7e21cb91b9b4cc69a81757f13fb919f4e70
 import sys
 
 
@@ -21,7 +14,7 @@ import sys
 # from data.tensor_helpers import ints_to_tensor, pad_tensors
 
 
-def process_data(input_type, addition_parameters=None, verbose=False, device='cpu', skip_frames=False, frames_to_skip=5, shrink=False, normalize=False, resize_tensors=False):
+def process_data(input_type, addition_parameters=None, verbose=False, device='cpu', skip_frames=False, frames_to_skip=5, shrink=1, normalize=False):
     """
     For this implementation to work you'll need to have the videos loaded into a directory under
     '../data/video_packs/input_type'
@@ -32,7 +25,7 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
     sys.path.append("..")
     top_level_path = f'../data/video_packs/{input_type}'
     video_list = os.listdir(top_level_path)
-
+    
     if addition_parameters is None:
         first_n_videos = len(video_list)
     else:
@@ -40,10 +33,15 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
             first_n_videos = addition_parameters['first_n_videos']
         else:
             first_n_videos = len(video_list)
+    
     if not verbose:
         progress = tqdm(total=first_n_videos)
 
     video_views = get_video_play_count(input_type=input_type)
+    
+    # Removing this
+    # if verbose:
+    #     print(video_views)
 
     x_dir = f"../data/x_tensors/{input_type}/"
     y_dir = f"../data/y_tensors/{input_type}/"
@@ -69,7 +67,9 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
 
         
         vf, af, info, meta = process_video(video_object_path=video_path, device=device)
-        n_channels, frames, height, width = vf.shape
+        # Reshaping tensor
+        frames, n_channels, height, width = vf.shape
+        vf = torch.reshape(vf, (n_channels, frames, height, width))
 
         if skip_frames:
             if verbose:
@@ -87,24 +87,11 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
             vf = vf/ 255.0
 
         # resize the tensor to 1024x576
-<<<<<<< HEAD
-        if resize_tensors:
-            vf = resize_tensor(vf)
-
-            if verbose:
-                    print(f'Resized tensor to size: {vf.shape}')
-        
-        if shrink:
-            vf = shrink_video(vf,shrink=shrink)
-            if verbose:
-                    print(f'Resize to tensor size: {vf.shape}')
-=======
-        #vf = resize_tensor(vf)
+        vf = resize_tensor(vf)
         if shrink > 1:
             vf = shrink_video(vf,shrink=shrink)
         if verbose:
                 print(f'Resize to tensor size: {vf.shape}')
->>>>>>> d7f4f7e21cb91b9b4cc69a81757f13fb919f4e70
                 
         x_file_path = f"{x_dir}{tiktok_video_id}_x_tensor.pt"
         y_file_path = f"{y_dir}{tiktok_video_id}_y_tensor.pt"
@@ -129,9 +116,9 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
 
         processed_videos += 1
         video_count += 1
-        if not verbose:
-            progress.update(1)
 
+        if not verbose:
+            progress.update(1) 
     if not verbose:
         progress.close()
 
@@ -182,8 +169,7 @@ def process_video(video_object_path, start=0, end=None, read_video=True, read_au
             frames.append(frame['data'])
             video_pts.append(frame['pts'])
         if len(frames) > 0:
-            # Updating to stack the tensor with the frames as 2nd dimension so no reshaping is needed
-            video_frames = torch.stack(frames, 1)
+            video_frames = torch.stack(frames, 0)
 
     audio_frames = torch.empty(0) # .to(device)
     audio_pts = []
@@ -194,7 +180,7 @@ def process_video(video_object_path, start=0, end=None, read_video=True, read_au
             frames.append(frame['data'])
             audio_pts.append(frame['pts'])
         if len(frames) > 0:
-            audio_frames = torch.cat(frames, 1)
+            audio_frames = torch.cat(frames, 0)
 
     return video_frames, audio_frames, (video_pts, audio_pts), video_object.get_metadata()
 
@@ -258,30 +244,3 @@ def shrink_video(input_tensor,shrink=1):
     new_width = 576//shrink
     resized_tensor = nn.functional.interpolate(input_tensor, size=(new_height, new_width), mode='bilinear', align_corners=False)
     return resized_tensor
-
-
-def get_train_and_val_loader(input_type, batch_size = 1,  verbose=False):
-    x_dir, y_dir = get_base_tensor_directories(input_type=input_type)
-
-    x_files = sorted([os.path.join(x_dir, f) for f in os.listdir(x_dir)])
-    y_files = sorted([os.path.join(y_dir, f) for f in os.listdir(y_dir)])
-
-    x_data = [torch.load(f) for f in x_files]
-    y_data = [torch.load(f) for f in y_files]
-
-    # Split the data
-    x_train, x_val, y_train, y_val = train_test_split(x_data, y_data, test_size=0.2, shuffle=False)
-
-    if verbose:
-        print(x_train[0].size())
-        print(x_val[0].size())
-        print(len(y_train))
-        print(len(y_val))
-    
-    # Create Batches with DataLoaders
-    train_loader = list(zip(x_train, y_train)) #TensorDataset(x_train, y_train)
-    val_loader = list(zip(x_val, y_val)) #TensorDataset(x_val, y_val)
-    train_loader = DataLoader(train_loader, batch_size=batch_size, shuffle=True, collate_fn=generate_batch)
-    val_loader = DataLoader(val_loader, batch_size=batch_size, shuffle=False, collate_fn=generate_batch)
-
-    return train_loader, val_loader
