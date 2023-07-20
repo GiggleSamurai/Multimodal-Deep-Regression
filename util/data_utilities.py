@@ -265,14 +265,18 @@ def shrink_video(input_tensor,shrink=1):
     return resized_tensor
 
 
-def get_train_and_val_loader(input_type, batch_size = 1,  verbose=False):
+def get_train_and_val_loader(input_type, batch_size = 1,  verbose=False, tensor_upper_limit=None):
     x_dir, y_dir = get_base_tensor_directories(input_type=input_type)
 
     x_files = sorted([os.path.join(x_dir, f) for f in os.listdir(x_dir)])
     y_files = sorted([os.path.join(y_dir, f) for f in os.listdir(y_dir)])
 
-    x_data = [torch.load(f) for f in x_files]
-    y_data = [torch.load(f) for f in y_files]
+    if tensor_upper_limit is not None:
+        x_files = x_files[:tensor_upper_limit]
+        y_files = y_files[:tensor_upper_limit]
+
+    x_data = [torch.load(f).to(torch.float32) for f in x_files]
+    y_data = [torch.load(f).to(torch.float32) for f in y_files]
 
     # Split the data
     x_train, x_val, y_train, y_val = train_test_split(x_data, y_data, test_size=0.2, shuffle=False)

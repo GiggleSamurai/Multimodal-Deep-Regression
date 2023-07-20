@@ -15,8 +15,8 @@ def train(model, dataloader, criterion, optimizer, device='cpu', verbose=False):
             if verbose:
                 print(f'\n\nForward pass on batch with size: {inputs.shape}')
 
-            # inputs, targets = inputs.to(device), targets.to(device)
-            inputs, targets = inputs.to(torch.float32), targets.to(torch.float32)
+            inputs, targets = inputs.to(device), targets.to(device)
+            # inputs, targets = inputs.to(torch.float32), targets.to(torch.float32)
             # forward pass
             outputs = model(inputs)
 
@@ -56,8 +56,8 @@ def evaluate(model, dataloader, criterion, device='cpu', verbose=False):
                 if verbose:
                     print(f'\n\nEvaluating on batch with size: {inputs.shape}')
 
-                #inputs, targets = inputs.to(device), targets.to(device)
-                inputs, targets = inputs.to(torch.float32), targets.to(torch.float32)
+                inputs, targets = inputs.to(device), targets.to(device)
+                # inputs, targets = inputs.to(torch.float32), targets.to(torch.float32)
                 outputs = model(inputs)
             except Exception as e:
                 print(f'Unable to evaluate on tensor of size: {inputs.shape}')
