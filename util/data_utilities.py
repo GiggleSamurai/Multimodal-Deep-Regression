@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 
 from tqdm import tqdm
- 
+>>>>>>> d7f4f7e21cb91b9b4cc69a81757f13fb919f4e70
 import sys
 
 
@@ -86,7 +86,7 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
             vf = vf/ 255.0
 
         # resize the tensor to 1024x576
-
+<<<<<<< HEAD
         if resize_tensors:
             vf = resize_tensor(vf)
 
@@ -103,21 +103,14 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
                 vf = nn.functional.pad(input=vf, pad=(0, 0, 0, 0, 0, set_frame_count - current_frames), mode='constant', value=0)
 
             if verbose:
-                print(f'Updated tensor to uniform frame count of: {set_frame_count}')
-                print(f'Resized tensor to size: {vf.shape}')
-
-
-        # if shrink:
-        #     vf = shrink_video(vf,shrink=shrink)
-        #     if verbose:
-        #             print(f'Resize to tensor size: {vf.shape}')
-
+                    print(f'Resize to tensor size: {vf.shape}')
+=======
         #vf = resize_tensor(vf)
         if shrink > 1:
             vf = shrink_video(vf,shrink=shrink)
-            if verbose:
-                    print(f'Resize to tensor size: {vf.shape}')
-
+        if verbose:
+                print(f'Resize to tensor size: {vf.shape}')
+>>>>>>> d7f4f7e21cb91b9b4cc69a81757f13fb919f4e70
                 
         x_file_path = f"{x_dir}{tiktok_video_id}_x_tensor.pt"
         y_file_path = f"{y_dir}{tiktok_video_id}_y_tensor.pt"
