@@ -51,11 +51,18 @@ class Mlp(nn.Module):
         self.drop = nn.Dropout(drop)
 
     def forward(self, x):
+        # print(f'MLP, FC1, input shape: {x.shape}.')
+
         x = self.fc1(x)
+        # print(f'MLP, FC1, OUTPUT shape: {x.shape}.')
         x = self.act(x)
+        # print(f'MLP, FC1, OUTPUT act shape: {x.shape}.')
         x = self.drop(x)
+        # print(f'MLP, FC1, OUTPUT drop shape: {x.shape}.')
         x = self.fc2(x)
+        # print(f'MLP, FC2, OUTPUT shape: {x.shape}.')
         x = self.drop(x)
+        # print(f'MLP, FC2, OUTPUT drop shape: {x.shape}.')
         return x
 
 
@@ -236,6 +243,8 @@ class SwinTransformerBlock3D(nn.Module):
     def forward_part1(self, x, mask_matrix):
         B, D, H, W, C = x.shape
         window_size, shift_size = get_window_size((D, H, W), self.window_size, self.shift_size)
+
+        # print(f'SwinTransformerBlock3D, forward_part1, B, D, H, W, C: {(B, D, H, W, C)}. \nWindow size: {window_size}. \nShift size: {shift_size}')
 
         x = self.norm1(x)
         # pad feature maps to multiples of window size
@@ -452,7 +461,8 @@ class PatchEmbed3D(nn.Module):
 
     def forward(self, x):
         """Forward function."""
-        # padding
+        # padding, dimensions here make sense
+        # https://pytorch.org/docs/stable/generated/torch.nn.Conv3d.html
         _, _, D, H, W = x.size()
         if W % self.patch_size[2] != 0:
             x = F.pad(x, (0, self.patch_size[2] - W % self.patch_size[2]))
@@ -461,6 +471,7 @@ class PatchEmbed3D(nn.Module):
         if D % self.patch_size[0] != 0:
             x = F.pad(x, (0, 0, 0, 0, 0, self.patch_size[0] - D % self.patch_size[0]))
 
+        # print(f'Padded input before 3D convolution: {x.shape}')
         x = self.proj(x)  # B C D Wh Ww
         if self.norm is not None:
             D, Wh, Ww = x.size(2), x.size(3), x.size(4)
@@ -468,7 +479,7 @@ class PatchEmbed3D(nn.Module):
             x = self.norm(x)
             x = x.transpose(1, 2).view(-1, self.embed_dim, D, Wh, Ww)
         
-        print(f'PatchEmbed3D shape:', x.shape)
+        # print(f'PatchEmbed3D shape:', x.shape)
         return x
 
 

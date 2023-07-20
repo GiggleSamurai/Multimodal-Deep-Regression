@@ -9,7 +9,7 @@ from util.video_swin_transformer import SwinTransformer3D
 
 
 class Swin_Transformer_model(nn.Module):
-    def __init__(self):
+    def __init__(self, linear_in_dim=1):
         super(Swin_Transformer_model, self).__init__()
         self.swin_transformer = SwinTransformer3D(
             # Default Total parameters: 35,542,255
@@ -21,13 +21,18 @@ class Swin_Transformer_model(nn.Module):
             # drop_path_rate=0.4
         )
         self.flatten = nn.Flatten()
-        self.regressor = nn.Linear(7962624, 1)
+        self.fc = nn.Sequential(
+            nn.Linear(in_features=linear_in_dim, out_features=128),
+            nn.ReLU(),
+            nn.Linear(in_features=128, out_features=1),
+        )
+
 
     def forward(self, x):
         x = self.swin_transformer(x)
-        print(self.swin_transformer)
-        print(x.shape)
+        # print(self.swin_transformer)
+        # print(x.shape)
         x = self.flatten(x)
-        print(x.shape)
-        x = self.regressor(x)
+        # print(x.shape)
+        x = self.fc(x)
         return x
