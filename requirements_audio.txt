@@ -4,4 +4,5 @@ tqdm
 more-itertools
 transformers>=4.19.0
 ffmpeg-python==0.2.0
-pip 
+pip
+ipykernel

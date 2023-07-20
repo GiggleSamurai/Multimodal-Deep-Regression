@@ -120,6 +120,6 @@ class ConvLSTMAutoencoder(nn.Module):
         h_t2, c_t2 = self.encoder_2.init_hidden(batch_size=B)
         
         # encoder forward
-        outputs = self.encoder(x, seq_len, future_seq, h_t, c_t, h_t2, c_t2)
+        outputs = self.encoder(x, seq_len, h_t, c_t, h_t2, c_t2)
 
         return outputs
