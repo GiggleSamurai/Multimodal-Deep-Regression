@@ -296,7 +296,7 @@ def get_train_and_val_loader(input_type, batch_size = 1,  verbose=False, tensor_
 
     return train_loader, val_loader
 
-def load_tensors(video_id, video_pack_type = 'video_pack_1000', verbose = False):
+def add_ae_tensor(video_id, video_pack_type = 'video_pack_1000', verbose = False):
     ae_dir = '../data/audio_embeddings/'
     x_tensor_dir = f'../data/x_tensors/{video_pack_type}/'
     y_tensor_dir = f'../data/y_tensors/{video_pack_type}/'
