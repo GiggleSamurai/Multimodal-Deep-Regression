@@ -20,12 +20,12 @@ import sys
 
 
 def process_data(input_type, addition_parameters=None, verbose=False, device='cpu', skip_frames=False, frames_to_skip=5, shrink=False, normalize=False, resize_tensors=False,
-    uniform_frames=False, set_frame_count=100):
+    uniform_frames=False, set_frame_count=100, clean_dir=False):
     """
     For this implementation to work you'll need to have the videos loaded into a directory under
     '../data/video_packs/input_type'
     """
-    
+
     assert input_type in get_valid_input_types(), 'Current implementation only set to process initial_1000, 1k and 5k video packs'
 
     sys.path.append("..")
@@ -47,11 +47,23 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
     x_dir = f"../data/x_tensors/{input_type}/"
     y_dir = f"../data/y_tensors/{input_type}/"
 
+    # Added this section to clean out the tensor directories if needed whne loading in new subset of the data
+    if clean_dir:
+        for mypath in [x_dir, y_dir]:
+            for root, dirs, files in os.walk(mypath, topdown=False):
+                for file in files:
+                    os.remove(os.path.join(root, file))
+
+                # Add this block to remove folders
+                # for dir in dirs:
+                #     os.rmdir(os.path.join(root, dir))
+
     os.makedirs(x_dir, exist_ok=True)
     os.makedirs(y_dir, exist_ok=True)
 
     processed_videos, video_count = 0, 0 
     while processed_videos < first_n_videos or video_count == len(video_list) - 1:
+        
         tiktok_video = video_list[video_count]
         video_path = f"{top_level_path}/{tiktok_video}"
         tiktok_video_id = tiktok_video.split(sep='.')[0]
@@ -66,8 +78,13 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
         if verbose:
             print(f'Currently processing: {tiktok_video}')
 
-        
-        vf, af, info, meta = process_video(video_object_path=video_path, device=device)
+        # Adding try/except here because a few videos in 5k pack couldn't be loaded
+        try:
+            vf, af, info, meta = process_video(video_object_path=video_path, device=device)
+        except:
+            video_count += 1
+            continue
+
         n_channels, frames, height, width = vf.shape
 
         if skip_frames:

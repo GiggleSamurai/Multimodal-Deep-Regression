@@ -16,7 +16,7 @@ class CNN3D(nn.Module):
         self.W = self.W // self.reduce
         self.D = self.D // self.reduce
 
-        self.conv1 = nn.Conv3d(3, 16, kernel_size=3, stride=1, padding=1)
+        self.conv1 = nn.Conv3d(3, self.filters, kernel_size=3, stride=1, padding=1)
         self.relu = nn.ReLU()
         self.maxpool = nn.MaxPool3d(kernel_size=2, stride=2)
         self.flatten = nn.Flatten()

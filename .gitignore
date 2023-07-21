@@ -5,6 +5,7 @@ data/x_tensors/*
 data/y_tensors/*
 *.mp4
 *.wav
+whisperenv/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
