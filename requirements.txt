@@ -1,10 +1,15 @@
 # Python 3.8 or later (for Linux, Python 3.8.1+ is needed)
 numpy
-pandas
 torch
+tqdm
+more-itertools
+transformers>=4.19.0
+ffmpeg-python==0.2.0
+pip
+ipykernel
+scikit-learn
 torchvision
 matplotlib
-tqdm
-pyyaml
-swin_transformer_pytorch
-scikit-learn
+av
+ipywidgets
+git+https://github.com/isaacOnline/whisper.git@extract-embeddings

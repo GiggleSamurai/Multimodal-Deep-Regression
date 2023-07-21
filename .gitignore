@@ -3,6 +3,7 @@ data/gen_data_x.pt
 data/gen_data_y.pt
 data/x_tensors/*
 data/y_tensors/*
+data/audio_embeddings/*
 *.mp4
 *.wav
 

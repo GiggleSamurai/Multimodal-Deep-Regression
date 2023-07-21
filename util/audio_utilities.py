@@ -4,10 +4,12 @@ import os
 import torch
 from pathlib import Path
 from whisper import Whisper
+from tqdm import tqdm
 
 # Extracts audio into wav format 
 def extract_audio(video_folder_path: str, output_dir: str):
-    for file in os.listdir(video_folder_path):
+    print('Extract in audio from video pack to .wav format..')
+    for file in tqdm(os.listdir(video_folder_path)):
         video_path = os.path.join(video_folder_path, file)
         video_id = video_path.split('/')[-1].split('.')[0]
         output_path = f'{output_dir}{video_id}.wav'
@@ -32,8 +34,8 @@ def extract_embeddings(audio_file_path: str, output_dir: str):
     already_extracted_embeddings = os.listdir(output_dir)
 
     model = whisper.load_model('base', device='cuda')
-
-    for audio_file in os.listdir(audio_file_path):
+    print('Converting to audio files to embeddings..')
+    for audio_file in tqdm(os.listdir(audio_file_path)):
         if embedding_exists(audio_file, already_extracted_embeddings):
             continue
 

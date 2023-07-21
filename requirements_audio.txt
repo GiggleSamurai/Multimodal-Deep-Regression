@@ -6,3 +6,10 @@ transformers>=4.19.0
 ffmpeg-python==0.2.0
 pip
 ipykernel
+
+scikit-learn
+torchvision
+matplotlib
+av
+ipywidgets
+git+https://github.com/isaacOnline/whisper.git@extract-embeddings

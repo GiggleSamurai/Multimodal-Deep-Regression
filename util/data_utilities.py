@@ -19,7 +19,7 @@ import sys
 # from data.tensor_helpers import ints_to_tensor, pad_tensors
 
 
-def process_data(input_type, addition_parameters=None, verbose=False, device='cpu', skip_frames=False, frames_to_skip=5, shrink=False, normalize=False, resize_tensors=False,
+def process_data(input_type, addition_parameters=None, verbose=False, device='cpu', frames_to_skip=False, shrink=False, normalize=False, resize_tensors=False,
     uniform_frames=False, set_frame_count=100):
     """
     For this implementation to work you'll need to have the videos loaded into a directory under
@@ -27,7 +27,7 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
     """
     
     assert input_type in get_valid_input_types(), 'Current implementation only set to process initial_1000, 1k and 5k video packs'
-
+    print('Processing video visual to tensors..')
     sys.path.append("..")
     top_level_path = f'../data/video_packs/{input_type}'
     video_list = os.listdir(top_level_path)
@@ -70,7 +70,7 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
         vf, af, info, meta = process_video(video_object_path=video_path, device=device)
         n_channels, frames, height, width = vf.shape
 
-        if skip_frames:
+        if frames_to_skip:
             if verbose:
                 print(f'Downsampling video tensors for every {frames_to_skip} frame')
                 print(f'Original tensor size: {(n_channels, frames, height, width)}')
@@ -333,3 +333,60 @@ def add_ae_tensor(video_id, video_pack_type = 'video_pack_1000', verbose = False
         target_tensor = None
 
     return video_tensor, audio_tensor, target_tensor
+
+def generate_batch_ensemble(batch):
+    # max depth of each batch for x1
+    max_d = max([x[0].shape[1] for x, _ in batch])
+    
+    padded_x = []
+    y_batch = []
+
+    for x, y in batch:
+        d = x[0].shape[1]
+        
+        # ConstantPad3d (left, right, top, bottom, front, back)
+        padding = nn.ConstantPad3d((0, 0, 0, 0, 0, max_d - d), 0)
+        padded_x.append(padding(x[0]))
+        y_batch.append(y)
+    
+    x1 = torch.stack(padded_x)
+    y = torch.tensor(y_batch).unsqueeze(1)
+    
+    x2 = [torch.mean(x[1][0], dim=1) for x, _ in batch]
+    x2 = torch.stack(x2)
+    x1, x2, y = x1.to(torch.float32), x2.to(torch.float32), y.to(torch.float32)
+    return x1, x2, y
+
+def get_ensemble_data(x_files, video_pack_type = 'video_pack_1000'):
+    visual = []
+    audio_embed = []
+    y_data = []
+
+    for f in x_files:
+        fname = f.split('/')[-1]
+        video_id = fname.split('_')[0]
+        video_tensor, audio_tensor, y_tensor = add_ae_tensor(video_id, video_pack_type)
+        visual.append(video_tensor)
+        audio_embed.append(audio_tensor)
+        y_data.append(y_tensor)
+
+    # make sure they all match
+    assert len(visual) == len(audio_embed) == len(y_data)
+
+    x_data = list(zip(visual, audio_embed))
+    return x_data, y_data
+
+def generate_autoencoder_batch(batch):
+    # max depth of each batch
+    max_d = max([x.shape[1] for x, _ in batch])
+    padded_x = []
+
+    for x, _ in batch:
+        d = x.shape[1]
+        # ConstantPad3d (left, right, top, bottom, front, back)
+        padding = nn.ConstantPad3d((0, 0, 0, 0, 0, max_d - d), 0)
+        padded_x.append(padding(x))
+
+    x = torch.stack(padded_x)
+    x, y = x.to(torch.float32), x.to(torch.float32)
+    return x, y
