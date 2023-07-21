@@ -295,3 +295,41 @@ def get_train_and_val_loader(input_type, batch_size = 1,  verbose=False, tensor_
     val_loader = DataLoader(val_loader, batch_size=batch_size, shuffle=False, collate_fn=generate_batch)
 
     return train_loader, val_loader
+
+def load_tensors(video_id, video_pack_type = 'video_pack_1000', verbose = False):
+    ae_dir = '../data/audio_embeddings/'
+    x_tensor_dir = f'../data/x_tensors/{video_pack_type}/'
+    y_tensor_dir = f'../data/y_tensors/{video_pack_type}/'
+    
+    ae_file_name = f'{video_id}.pt'
+    video_tensor = torch.load(os.path.join(x_tensor_dir, f'{video_id}_x_tensor.pt'))
+
+    try:
+        audio_embedding = torch.load(os.path.join(ae_dir, ae_file_name))
+    except FileNotFoundError as e:
+        if verbose:
+            print(f'no embedding file found for {video_id}')
+        # empty list if no embedding file found
+        audio_embedding = []
+
+    if len(audio_embedding) == 0:
+        if verbose:
+            print(f'no embedding for {video_id}, likely speechless audio')
+        # if no audio embedding, fill tensor with 0s of this shape
+        # dim 0, 1, 3 is fixed, but dim 3 can be decided
+        audio_tensor = torch.zeros(1, 7, 150, 512)
+    else:
+        audio_tensor = audio_embedding[0]
+
+    if (len(audio_embedding) > 1):
+        for i in range(1, len(audio_embedding)):
+            audio_tensor = torch.cat((audio_tensor, audio_embedding[i]), 2)
+    
+    try:
+        target_tensor = torch.load(os.path.join(y_tensor_dir, f'{video_id}_y_tensor.pt'))
+    except:
+        if verbose:
+            print(f'no y tensor found for {video_id}')
+        target_tensor = None
+
+    return video_tensor, audio_tensor, target_tensor
