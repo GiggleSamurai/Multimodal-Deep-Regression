@@ -2,11 +2,11 @@ import torch
 import torch.nn as nn
 
 class CNN3D(nn.Module):
-    def __init__(self, filters = 16, dropout_rate = 0.0, reduce_pool = 4, depth = 64):
+    def __init__(self, filters = 16, dropout_rate = 0.0, reduce_pool = 4, depth = 64, shrink=1):
         super(CNN3D, self).__init__()
         self.channels = 3
-        self.H = 1024
-        self.W = 576
+        self.H = 1024 // shrink
+        self.W = 576 // shrink
         self.D = depth
         self.filters = filters
         self.dropout_rate = dropout_rate

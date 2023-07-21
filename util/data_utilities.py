@@ -231,7 +231,8 @@ def generate_batch(batch):
         y_batch.append(y)
 
     x = torch.stack(padded_x)
-    y = torch.tensor(y_batch)
+    y = torch.tensor(y_batch).unsqueeze(1)
+    x, y = x.to(torch.float32), y.to(torch.float32)
     return x, y
 
 def resize_tensor(input_tensor):

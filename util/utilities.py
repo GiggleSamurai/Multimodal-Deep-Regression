@@ -10,24 +10,11 @@ def train(model, dataloader, criterion, optimizer, device='cpu', verbose=False):
     total_loss = 0.0
     untrainable_tensors = 0
     for inputs, targets in dataloader:
-        # try:
-        if 1 == 1:
-            if verbose:
-                print(f'\n\nForward pass on batch with size: {inputs.shape}')
-
-            inputs, targets = inputs.to(device), targets.to(device)
-            # inputs, targets = inputs.to(torch.float32), targets.to(torch.float32)
-            # forward pass
-            outputs = model(inputs)
-
-        # except Exception as e:
-        #     print(f'Unable to train on tensor of size: {inputs.shape}')
-        #     print('caugh an error, keep going ' + str(e))
-        #     untrainable_tensors += 1
-        #     continue
-
-        if outputs.shape != targets.shape:
-            targets = targets.unsqueeze(1)
+        inputs, targets = inputs.to(device), targets.to(device)
+        if verbose:
+            print(f'\n\nForward pass on batch with size: {inputs.shape}')
+        # forward pass
+        outputs = model(inputs)
 
         if verbose:
             print(f'Model Output (shape: {outputs.shape}): {outputs}')
@@ -40,7 +27,6 @@ def train(model, dataloader, criterion, optimizer, device='cpu', verbose=False):
         loss.backward()
         optimizer.step()
         total_loss += loss.item()
-        gc.collect()
 
     avg_loss = total_loss / (len(dataloader) - untrainable_tensors)
     return total_loss, avg_loss
@@ -57,16 +43,16 @@ def evaluate(model, dataloader, criterion, device='cpu', verbose=False):
                     print(f'\n\nEvaluating on batch with size: {inputs.shape}')
 
                 inputs, targets = inputs.to(device), targets.to(device)
-                # inputs, targets = inputs.to(torch.float32), targets.to(torch.float32)
                 outputs = model(inputs)
+
             except Exception as e:
                 print(f'Unable to evaluate on tensor of size: {inputs.shape}')
                 print('caugh an error, keep going ' + str(e))
                 unevaluable_tensors += 1
                 continue
 
-            if outputs.shape != targets.shape:
-                targets = targets.unsqueeze(1)
+            #if outputs.shape != targets.shape:
+            #    targets = targets.unsqueeze(1)
 
             if verbose:
                 print(f'Model Output (shape: {outputs.shape}): {outputs}')
@@ -74,7 +60,6 @@ def evaluate(model, dataloader, criterion, device='cpu', verbose=False):
 
             loss = criterion(outputs, targets)
             total_loss += loss.item()
-            gc.collect()
 
     avg_loss = total_loss / (len(dataloader) - unevaluable_tensors)
     return total_loss, avg_loss
