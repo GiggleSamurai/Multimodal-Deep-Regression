@@ -43,7 +43,8 @@ def extract_embeddings(audio_file_path: str, output_dir: str):
 
         audio_path = os.path.join(audio_file_path, audio_file)
         id = audio_path.split('/')[-1].split('.')[0]
-        output_path = f'{output_dir}{id}.pt'
+        output_path = os.path.join(output_dir, f'{id}.pt')
+        #output_path = f'{output_dir}{id}.pt'
 
         # issue extracting embeddings for certain videos; catch and continue
         try:
