@@ -9,11 +9,13 @@ from tqdm import tqdm
 # Extracts audio into wav format 
 def extract_audio(video_folder_path: str, output_dir: str):
     print('Extract in audio from video pack to .wav format..')
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
     for file in tqdm(os.listdir(video_folder_path)):
         video_path = os.path.join(video_folder_path, file)
         video_id = video_path.split('/')[-1].split('.')[0]
-        output_path = f'{output_dir}{video_id}.wav'
-        
+        #output_path = f'{output_dir}{video_id}.wav'
+        output_path = os.path.join(output_dir, f'{video_id}.wav')
         args = [
             'ffmpeg',
             '-i', video_path,

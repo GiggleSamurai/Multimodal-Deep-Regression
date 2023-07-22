@@ -169,7 +169,7 @@ def get_video_play_count(input_type):
         video_views = {}
         for video_metadata in video_metadata_list:
             video_views[video_metadata['id']] = video_metadata['playCount']
-    elif input_type in ['video_pack_1000', 'video_pack_5000']:
+    elif input_type in ['video_pack_1000', 'video_pack_5000','video_pack_20','video_pack_100']:
         f = open('../data/tiktok_meta_data.json', encoding="utf8")
         video_metadata_list = json.load(f)
         video_views = {}
@@ -225,7 +225,7 @@ def get_valid_input_types():
     """
     initial_1000 dataset: https://www.kaggle.com/datasets/erikvdven/tiktok-trending-december-2020?resource=download
     """
-    return ['initial_1000', 'video_pack_1000', 'video_pack_5000']
+    return ['initial_1000', 'video_pack_1000', 'video_pack_5000','video_pack_20','video_pack_100']
 
 
 def get_base_tensor_directories(input_type):
