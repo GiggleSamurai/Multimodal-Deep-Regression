@@ -6,6 +6,7 @@ data/y_tensors/*
 data/audio_embeddings/*
 *.mp4
 *.wav
+whisperenv/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

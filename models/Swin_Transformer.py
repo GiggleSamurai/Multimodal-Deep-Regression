@@ -22,9 +22,8 @@ class Swin_Transformer_model(nn.Module):
         )
         self.flatten = nn.Flatten()
         self.fc = nn.Sequential(
-            nn.Linear(in_features=linear_in_dim, out_features=128),
-            nn.ReLU(),
-            nn.Linear(in_features=128, out_features=1),
+            nn.Linear(in_features=linear_in_dim, out_features=1),
+            nn.ReLU() 
         )
 
 
