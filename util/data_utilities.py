@@ -63,11 +63,6 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
 
     processed_videos, video_count = 0, 0 
     while processed_videos < first_n_videos or video_count == len(video_list) - 1:
-        print(f"ARE WE AT THE END: {video_count == len(video_list) - 1}")
-        print(f"PROCESSED VIDEOS: {processed_videos}")
-        print(f'first n videos {first_n_videos}')
-        print(f'video list {video_list}')
-        print(f'video count {video_count}')
         
         tiktok_video = video_list[video_count]
         video_path = f"{top_level_path}/{tiktok_video}"
@@ -88,7 +83,6 @@ def process_data(input_type, addition_parameters=None, verbose=False, device='cp
             vf, af, info, meta = process_video(video_object_path=video_path, device=device)
         except:
             video_count += 1
-            print("ERROR")
             continue
 
         n_channels, frames, height, width = vf.shape
