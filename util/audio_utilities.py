@@ -31,17 +31,21 @@ def extract_audio(video_folder_path: str, output_dir: str):
         proc.check_returncode()
 
 # Extracts embeddings and saves in output dir
-def extract_embeddings(audio_file_path: str, output_dir: str):
+def extract_embeddings(audio_file_path: str, output_dir: str, device, windows_os = False):
     # track embeddings already extracted
     already_extracted_embeddings = os.listdir(output_dir)
 
-    model = whisper.load_model('base', device='cuda')
+    model = whisper.load_model('base', device=device)
     print('Converting to audio files to embeddings..')
     for audio_file in tqdm(os.listdir(audio_file_path)):
         if embedding_exists(audio_file, already_extracted_embeddings):
             continue
 
-        audio_path = os.path.join(audio_file_path, audio_file)
+        if (windows_os):
+            audio_path = os.path.join(audio_file_path, audio_file).replace('\\', '/')
+        else:
+            audio_path = os.path.join(audio_file_path, audio_file)
+            
         id = audio_path.split('/')[-1].split('.')[0]
         output_path = os.path.join(output_dir, f'{id}.pt')
         #output_path = f'{output_dir}{id}.pt'
