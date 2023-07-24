@@ -92,14 +92,17 @@ class GaussianNormalization(nn.Module):
 class TransformerModel_Audio(nn.Module):
 
     def __init__(self, d_model: int, nhead: int, d_hid: int,
-                 nlayers: int, dropout: float = 0.5): #, ntoken: int
+                 nlayers: int, dropout: float = 0.5, pass_transformer=False): #, ntoken: int
         super().__init__()
-        self.pos_encoder = PositionalEncoding(d_model, dropout)
-        encoder_layers = TransformerEncoderLayer(d_model, nhead, d_hid, dropout)
-        self.transformer_encoder = TransformerEncoder(encoder_layers, nlayers)
-        #self.embedding = nn.Embedding(ntoken, d_model)
-        self.d_model = d_model
-        self.flatten = nn.Flatten()
+        self.pass_transformer = pass_transformer
+        if not self.pass_transformer:
+            self.pos_encoder = PositionalEncoding(d_model, dropout)
+            encoder_layers = TransformerEncoderLayer(d_model, nhead, d_hid, dropout)
+            self.transformer_encoder = TransformerEncoder(encoder_layers, nlayers)
+            #self.embedding = nn.Embedding(ntoken, d_model)
+            self.d_model = d_model
+        
+        self.flatten = nn.Flatten()    
         self.linear = nn.Linear(7 * d_model, 256)
         #self.gaussnoraml = GaussianNormalization()
 
@@ -114,12 +117,14 @@ class TransformerModel_Audio(nn.Module):
         return x
     
     def forward(self, audio_embed) -> Tensor:
-        
         audio_embed = audio_embed.permute(1, 0, 2)   #(Seq, Batch, Embedding_dim)
         audio_embed = self.replace_minus_inf(audio_embed)
-        audio_embed = self.pos_encoder(audio_embed)
-        audio_embed = self.transformer_encoder(audio_embed)
-        audio_embed = audio_embed.permute(1, 0, 2)  #(Batch, Seq, Embedding_dim)     
+        
+        if not self.pass_transformer:
+            audio_embed = self.pos_encoder(audio_embed)
+            audio_embed = self.transformer_encoder(audio_embed)
+
+        audio_embed = audio_embed.permute(1, 0, 2)  #(Batch, Seq, Embedding_dim)   
         audio_embed = self.flatten(audio_embed)
         audio_embed = self.linear(audio_embed)
         return audio_embed

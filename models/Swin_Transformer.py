@@ -9,9 +9,16 @@ from util.video_swin_transformer import SwinTransformer3D
 
 
 class Swin_Transformer_model(nn.Module):
-    def __init__(self, linear_in_dim=1):
+    def __init__(self, linear_in_dim=1, patch_size=4, embed_dim=96, drop_rate=0, depths=[2, 2, 6, 2], num_heads=[3, 6, 12, 24], patch_norm=False, window_size=(2,7,7)):
         super(Swin_Transformer_model, self).__init__()
         self.swin_transformer = SwinTransformer3D(
+            patch_size=patch_size,
+            embed_dim=embed_dim,
+            drop_rate=drop_rate,
+            depths=depths,
+            window_size=window_size,
+            num_heads=num_heads,
+            patch_norm=patch_norm
             # Default Total parameters: 35,542,255
             # embed_dim=128, 
             # depths=[2, 2, 18, 2], 
@@ -21,10 +28,15 @@ class Swin_Transformer_model(nn.Module):
             # drop_path_rate=0.4
         )
         self.flatten = nn.Flatten()
-        self.fc = nn.Sequential(
-            nn.Linear(in_features=linear_in_dim, out_features=1),
-            nn.ReLU() 
-        )
+        self.relu = nn.ReLU()
+        self.linear1 = nn.Linear(in_features=linear_in_dim, out_features=1)
+        # self.linear2 = nn.Linear(in_features=10, out_features=1)
+        # self.fc = nn.Sequential(
+        #     nn.Linear(in_features=linear_in_dim, out_features=10),
+        #     nn.ReLU(),            
+        #     nn.Linear(in_features=10, out_features=1),
+        #     nn.ReLU()
+        # )
 
 
     def forward(self, x):
@@ -32,6 +44,7 @@ class Swin_Transformer_model(nn.Module):
         # print(self.swin_transformer)
         # print(x.shape)
         x = self.flatten(x)
+        x = self.relu(self.linear1(x))
         # print(x.shape)
-        x = self.fc(x)
+        # x = self.linear2(x)
         return x
