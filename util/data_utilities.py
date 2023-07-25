@@ -367,7 +367,11 @@ def generate_batch_ensemble(batch):
         y_batch.append(y)
     
     x1 = torch.stack(padded_x)
-    y = torch.tensor(y_batch).unsqueeze(1)
+    # Adding this try/catch for classification use case
+    try:
+        y = torch.tensor(y_batch).unsqueeze(1)
+    except:
+        y = torch.stack(y_batch)
     
     x2 = [torch.mean(x[1][0], dim=1) for x, _ in batch]
     x2 = torch.stack(x2)
