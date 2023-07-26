@@ -5,6 +5,7 @@ import itertools
 import torchvision
 import torch.nn as nn
 import matplotlib.pyplot as plt
+import numpy as np
 
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
@@ -252,7 +253,11 @@ def generate_batch(batch):
         y_batch.append(y)
 
     x = torch.stack(padded_x)
-    y = torch.tensor(y_batch).unsqueeze(1)
+    # Adding this try/catch for classification use case
+    try:
+        y = torch.tensor(y_batch).unsqueeze(1)
+    except:
+        y = torch.stack(y_batch)
     x, y = x.to(torch.float32), y.to(torch.float32)
     return x, y
 
@@ -287,7 +292,7 @@ def shrink_video(input_tensor,shrink=1):
     return resized_tensor
 
 
-def get_train_and_val_loader(input_type, batch_size = 1,  verbose=False, tensor_upper_limit=None, scale_target=False):
+def get_train_and_val_loader(input_type, batch_size = 1,  verbose=False, tensor_upper_limit=None, target_type='regression', scale_target=False):
     x_dir, y_dir = get_base_tensor_directories(input_type=input_type)
 
     x_files = sorted([os.path.join(x_dir, f) for f in os.listdir(x_dir)])
@@ -311,6 +316,43 @@ def get_train_and_val_loader(input_type, batch_size = 1,  verbose=False, tensor_
 
     # Split the data
     x_train, x_val, y_train, y_val = train_test_split(x_data, y_data, test_size=0.2, shuffle=False)
+
+    if target_type == 'classification':
+        y_train_raw = np.array([i.item() for i in y_train])
+        y_train_encoded = np.where(
+                y_train_raw <= 403.599998,
+                0,
+                np.where(
+                    y_train_raw <= 2100.000000,
+                    1,
+                    np.where(
+                        y_train_raw <= 7500.500000,
+                        2,
+                        3
+                    )
+                )
+            )
+        y_val_raw = np.array([i.item() for i in y_val])
+        y_val_encoded = np.where(
+            y_val_raw <= 403.599998,
+            0,
+            np.where(
+                y_val_raw <= 2100.000000,
+                1,
+                np.where(
+                    y_val_raw <= 7500.500000,
+                    2,
+                    3
+                )
+            )
+        )
+        y_train = np.zeros((y_train_encoded.size, y_train_encoded.max() + 1))
+        y_train[np.arange(y_train_encoded.size), y_train_encoded] = 1
+        y_train = torch.from_numpy(y_train)
+
+        y_val = np.zeros((y_val_encoded.size, y_train_encoded.max() + 1))
+        y_val[np.arange(y_val_encoded.size), y_val_encoded] = 1
+        y_val = torch.from_numpy(y_val)
 
     if verbose:
         print(x_train[0].size())

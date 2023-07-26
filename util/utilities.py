@@ -5,7 +5,7 @@ import numpy as np
 import gc
 
 # training function
-def train(model, dataloader, criterion, optimizer, device='cpu', verbose=False):
+def train(model, dataloader, criterion, optimizer, device='cpu', verbose=False, argmax_target=False):
     model.train()
     total_loss = 0.0
     untrainable_tensors = 0
@@ -19,6 +19,9 @@ def train(model, dataloader, criterion, optimizer, device='cpu', verbose=False):
         if verbose:
             print(f'Model Output (shape: {outputs.shape}): {outputs}')
             print(f'Target (shape: {targets.shape}): {targets}')
+        
+        if argmax_target:
+            targets = np.argmax(np.array(targets),1)
 
         loss = criterion(outputs, targets)
 
@@ -32,7 +35,7 @@ def train(model, dataloader, criterion, optimizer, device='cpu', verbose=False):
     return total_loss, avg_loss
 
 # evaluation function
-def evaluate(model, dataloader, criterion, device='cpu', verbose=False):
+def evaluate(model, dataloader, criterion, device='cpu', verbose=False, argmax_target=False):
     model.eval()
     total_loss = 0.0
     unevaluable_tensors = 0
@@ -57,6 +60,9 @@ def evaluate(model, dataloader, criterion, device='cpu', verbose=False):
             if verbose:
                 print(f'Model Output (shape: {outputs.shape}): {outputs}')
                 print(f'Target (shape: {targets.shape}): {targets}')
+
+            if argmax_target:
+                targets = np.argmax(np.array(targets),1)
 
             loss = criterion(outputs, targets)
             total_loss += loss.item()
