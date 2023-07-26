@@ -47,13 +47,14 @@ class EnsembleModelClassifier(nn.Module):
         nn.ReLU(),
         nn.Linear(256*2, 4)
         ) 
+        self.softmax = nn.LogSoftmax(dim=1)
 
     def forward(self, video_embed, audio_embed):
         video_embed = self.model1(video_embed)
         audio_embed = self.model2(audio_embed)
         output = torch.cat((video_embed, audio_embed), dim=1)
         output = self.regressor(output)
-        output = nn.functional.softmax(output)
+        # output = self.softmax(output)
         # output = torch.argmax(output).view(-1, 1)
         # print(output)
         return output

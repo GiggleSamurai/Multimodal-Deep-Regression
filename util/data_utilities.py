@@ -13,6 +13,10 @@ from tqdm import tqdm
 
 import sys
 
+import numpy as np
+
+from sklearn.preprocessing import StandardScaler
+
 
 # from data.dataset import Dataset
 # from torch.utils.data import DataLoader
@@ -283,7 +287,7 @@ def shrink_video(input_tensor,shrink=1):
     return resized_tensor
 
 
-def get_train_and_val_loader(input_type, batch_size = 1,  verbose=False, tensor_upper_limit=None):
+def get_train_and_val_loader(input_type, batch_size = 1,  verbose=False, tensor_upper_limit=None, scale_target=False):
     x_dir, y_dir = get_base_tensor_directories(input_type=input_type)
 
     x_files = sorted([os.path.join(x_dir, f) for f in os.listdir(x_dir)])
@@ -295,6 +299,15 @@ def get_train_and_val_loader(input_type, batch_size = 1,  verbose=False, tensor_
 
     x_data = [torch.load(f).to(torch.float32) for f in x_files]
     y_data = [torch.load(f).to(torch.float32) for f in y_files]
+
+    if scale_target:
+        y_data_raw = [i.item() for i in y_data]
+        y_data_raw = np.array(y_data_raw).reshape(-1, 1)
+        scaler = StandardScaler()
+        scaler.fit(np.array(y_data_raw))
+        scaled_y_data = scaler.transform(y_data_raw)
+
+        y_data = torch.from_numpy(scaled_y_data).unsqueeze(dim=1)
 
     # Split the data
     x_train, x_val, y_train, y_val = train_test_split(x_data, y_data, test_size=0.2, shuffle=False)
@@ -311,7 +324,10 @@ def get_train_and_val_loader(input_type, batch_size = 1,  verbose=False, tensor_
     train_loader = DataLoader(train_loader, batch_size=batch_size, shuffle=True, collate_fn=generate_batch)
     val_loader = DataLoader(val_loader, batch_size=batch_size, shuffle=False, collate_fn=generate_batch)
 
-    return train_loader, val_loader
+    if scale_target:
+        return train_loader, val_loader, scaler
+    else:
+        return train_loader, val_loader
 
 def add_ae_tensor(video_id, video_pack_type = 'video_pack_1000', verbose = False):
     ae_dir = '../data/audio_embeddings/'
