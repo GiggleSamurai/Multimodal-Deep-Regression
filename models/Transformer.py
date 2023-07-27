@@ -106,19 +106,32 @@ class TransformerModel_Audio(nn.Module):
         self.linear = nn.Linear(7 * d_model, 256)
         #self.gaussnoraml = GaussianNormalization()
 
+    # @staticmethod
+    # def replace_minus_inf(x):
+    #     mask = x != float('-inf')
+    #     if mask.any():
+    #         min_val = x[mask].min()
+    #     else:
+    #         min_val = 0.0
+    #     x[~mask] = min_val
+    #     return x
     @staticmethod
-    def replace_minus_inf(x):
-        mask = x != float('-inf')
+    def replace_inf(x):
+        mask = ~torch.isinf(x)
         if mask.any():
             min_val = x[mask].min()
+            max_val = x[mask].max()
         else:
-            min_val = 0.0
-        x[~mask] = min_val
+            min_val = max_val = 0.0
+
+        x[(x == float('-inf'))] = min_val
+        x[(x == float('inf'))] = max_val
         return x
+    
     
     def forward(self, audio_embed) -> Tensor:
         audio_embed = audio_embed.permute(1, 0, 2)   #(Seq, Batch, Embedding_dim)
-        audio_embed = self.replace_minus_inf(audio_embed)
+        audio_embed = self.replace_inf(audio_embed)
         
         if not self.pass_transformer:
             audio_embed = self.pos_encoder(audio_embed)
