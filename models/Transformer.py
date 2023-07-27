@@ -127,11 +127,22 @@ class TransformerModel_Audio(nn.Module):
         x[(x == float('-inf'))] = min_val
         x[(x == float('inf'))] = max_val
         return x
-    
+
+    @staticmethod
+    def replace_nan(x):
+        mask = ~torch.isnan(x)
+        if mask.any():
+            mean_val = x[mask].mean()
+        else:
+            mean_val = 0.0
+
+        x[torch.isnan(x)] = mean_val
+        return x
     
     def forward(self, audio_embed) -> Tensor:
         audio_embed = audio_embed.permute(1, 0, 2)   #(Seq, Batch, Embedding_dim)
         audio_embed = self.replace_inf(audio_embed)
+        audio_embed = self.replace_nan(audio_embed)
         
         if not self.pass_transformer:
             audio_embed = self.pos_encoder(audio_embed)
