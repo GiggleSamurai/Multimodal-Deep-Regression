@@ -56,6 +56,7 @@ class CNN3DClassifier(nn.Module):
         self.D = self.D // self.reduce
 
         self.conv1 = nn.Conv3d(3, self.filters, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv3d(self.filters, self.filters, kernel_size=3, stride=1, padding=1)
         self.relu = nn.ReLU()
         self.maxpool = nn.MaxPool3d(kernel_size=2, stride=2)
         self.flatten = nn.Flatten()
@@ -68,6 +69,7 @@ class CNN3DClassifier(nn.Module):
 
     def forward(self, x):
         x = self.conv1(x)
+        x = self.conv2(x)
         x = self.maxpool(x)
         x = self.dropout(x)
         x = self.adaptive_pool(x)
