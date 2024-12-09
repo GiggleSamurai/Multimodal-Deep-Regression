@@ -44,4 +44,35 @@ Content creators face challenges in predicting the success of their investments 
    ```bash
    git clone https://github.com/<your-username>/multimodal-tiktok-success.git
    cd multimodal-tiktok-success
+   ```
+2. Install dependencies:  
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Prepare the dataset and place it in the `/data` folder.
+4. Run training:  
+   ```bash
+   python train_model.py
+   ```
+5. Evaluate results and visualize performance.
+
+---
+
+### 📚 Citation
+If you use our work, please cite as:
+
+```scss
+@article{wong2024multimodal,
+  title={Multimodal Deep Regression on TikTok Content Success},
+  author={Wong, Louis and Salih, Ahmed and Xu, Jason and Song, Mingyao},
+  journal={Georgia Tech Research},
+  year={2024}
+}
+```
+
+---
+
+### 📬 Contact
+For questions or collaborations, feel free to reach out to the authors via their listed emails.
+
 
